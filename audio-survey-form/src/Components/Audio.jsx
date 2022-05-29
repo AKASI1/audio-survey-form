@@ -6,6 +6,7 @@ import { FaStar } from "react-icons/fa";
 const Audio = (props) => {
   const [rating, setRating] = useState(null);
   const [hover, setHover] = useState();
+  const rates = props.data[props.mainTypeIndex].sections[props.sectionId].rates;
   return (
     <div className="mb-4 pb-4 border-bottom" style={{ marginLeft: "-30px" }}>
       <div className="d-flex justify-content-between mb-3">
@@ -13,10 +14,9 @@ const Audio = (props) => {
         <div>
           {[...Array(4)].map((star, i) => {
             const ratingValue = i + 1;
-            const isRatedBefore = props.rates.some(
+            const isRatedBefore = rates.some(
               (audio) => audio.rate === ratingValue && audio.name !== props.name
             );
-
             return (
               <label aria-disabled style={{ cursor: "pointer" }} key={i}>
                 <input
@@ -29,15 +29,16 @@ const Audio = (props) => {
                     setRating((prev) =>
                       prev === ratingValue ? null : ratingValue
                     );
-                    props.setRate((prev) =>
-                      prev.map((audio) =>
-                        audio.name === props.name
-                          ? audio.rate === ratingValue
-                            ? { name: props.name, rate: null }
-                            : { name: props.name, rate: ratingValue }
-                          : audio
-                      )
-                    );
+                    let arr = [...props.data];
+                    rates[props.rateId].rate === ratingValue
+                      ? (arr[props.mainTypeIndex].sections[
+                          props.sectionId
+                        ].rates[props.rateId].rate = null)
+                      : (arr[props.mainTypeIndex].sections[
+                          props.sectionId
+                        ].rates[props.rateId].rate = ratingValue);
+
+                    props.setData(arr);
                   }}
                 />
                 <FaStar
@@ -52,7 +53,7 @@ const Audio = (props) => {
           })}
         </div>
       </div>
-      <audio id={props.id} src={props.id} controls></audio>
+      <audio id={props.file} src={props.file} controls></audio>
     </div>
   );
 };

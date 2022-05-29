@@ -1,24 +1,36 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router";
 import styled from "styled-components";
 import AudioType from "./AudioType";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "../Firebase";
 import { Link } from "react-router-dom";
+import { Context } from "../Storage";
 
 /*___________________________________________________________________________________*/
 
 function Main() {
+  const audios = useContext(Context);
+
   //Info
   const [name, setName] = useState("");
   const [country, setCuontry] = useState("");
   const [age, setAge] = useState(0);
-  //Ratings
-  const [jazz, setJazz] = useState({});
-  const [pop, setPop] = useState({});
-  const [rock, setRock] = useState({});
+
+  //Final Data
+  const [data, setData] = useState(
+    audios.map((a) => ({
+      mainType: a.title,
+      sections: a.sections.map((s) => ({
+        type: s.type,
+        comment: "",
+        rates: s.audios.map((a) => ({ name: a.name, rate: 0 })),
+      })),
+    }))
+  );
+  console.log(data);
+
   const navigate = useNavigate();
-  console.log(jazz);
 
   const Submit = (e) => {
     e.preventDefault();
@@ -37,13 +49,14 @@ function Main() {
 
     addDoc(collection(db, "users"), {
       info: { name, country, age },
-      ratings: [jazz, pop, rock],
+      data,
     }).catch((e) => {
       console.error("Error adding document: ", e.message);
     });
 
     navigate("/report");
   };
+
   return (
     <form onSubmit={Submit}>
       <Link to={"/report"}>
@@ -98,10 +111,15 @@ function Main() {
       </UserInfo>
 
       <section className=" flex-wrap d-flex gap-3 justify-content-between p-4 border-top mt-5">
-        {/* Should be instead of 'type' an array audio sections containing audio files */}
-        <AudioType type="Jazz" setData={setJazz} />
-        <AudioType type="Pop" setData={setPop} />
-        <AudioType type="Rock" setData={setRock} />
+        {audios.map((audio, id) => (
+          <AudioType
+            key={id}
+            sections={audio.sections}
+            mainType={audio.title}
+            setData={setData}
+            data={data}
+          />
+        ))}
       </section>
 
       <button className="btn btn-primary my-5 mx-auto d-flex fs-4">
@@ -157,7 +175,7 @@ const Header = styled.h1`
     animation: left 0.5s linear forwards;
   }
 `;
-
+/*______________________________________________*/
 const UserInfo = styled.div`
   border: 1px solid #eee;
   padding-top: 20px;
